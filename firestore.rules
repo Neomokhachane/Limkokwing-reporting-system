@@ -1,0 +1,162 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function role() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? userProfile().role
+        : null;
+    }
+
+    function isPL() {
+      return role() in ["pl", "prl", "admin"];
+    }
+
+    function isPRL() {
+      return role() == "prl";
+    }
+
+    function isLecturer() {
+      return role() == "lecturer";
+    }
+
+    function isStudent() {
+      return role() == "student";
+    }
+
+    function missing(value) {
+      return value == null || value == "";
+    }
+
+    function canCompleteStudentDetails(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return signedIn() &&
+        request.auth.uid == userId &&
+        changed.hasOnly(["studentId", "studentNumber", "faculty"]) &&
+        (
+          missing(resource.data.studentId) ||
+          missing(resource.data.studentNumber) ||
+          missing(resource.data.faculty)
+        ) &&
+        request.resource.data.studentId is string &&
+        request.resource.data.studentId != "" &&
+        request.resource.data.studentNumber is string &&
+        request.resource.data.studentNumber != "" &&
+        request.resource.data.faculty is string &&
+        request.resource.data.faculty != "";
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow read: if signedIn();
+      allow update: if isPL() || canCompleteStudentDetails(userId);
+      allow delete: if isPL();
+    }
+
+    match /faculties/{facultyId} {
+      allow read: if signedIn();
+      allow write: if isPL();
+    }
+
+    match /courses/{courseId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isPL();
+    }
+
+    match /classes/{classId} {
+      allow read: if signedIn();
+      allow create, update: if isPL() || (isLecturer() && request.resource.data.lecturerId == request.auth.uid);
+      allow delete: if isPL() || (isLecturer() && resource.data.lecturerId == request.auth.uid);
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow read: if signedIn();
+      allow create: if isPL() || (
+        isStudent() &&
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.courseId is string &&
+        request.resource.data.courseId != ""
+      );
+      allow update: if isPL();
+      allow delete: if isPL();
+    }
+
+    match /enrollmentRequests/{requestId} {
+      allow read: if isPL() || (signedIn() && resource.data.studentId == request.auth.uid);
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "studentId",
+          "studentName",
+          "studentNumber",
+          "courseId",
+          "courseName",
+          "courseCode",
+          "faculty",
+          "status",
+          "createdAt"
+        ]) &&
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.studentName is string &&
+        request.resource.data.studentNumber is string &&
+        request.resource.data.courseId is string &&
+        request.resource.data.courseId != "" &&
+        request.resource.data.courseName is string &&
+        request.resource.data.courseCode is string &&
+        request.resource.data.faculty is string &&
+        request.resource.data.status == "pending" &&
+        request.resource.data.createdAt == request.time;
+      allow update: if isPL() &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.courseId == resource.data.courseId &&
+        request.resource.data.status in ["approved", "rejected"];
+      allow delete: if isPL();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if signedIn();
+      allow create, update: if isPL() || (isLecturer() && request.resource.data.lecturerId == request.auth.uid);
+      allow delete: if isPL();
+    }
+
+    match /reports/{reportId} {
+      allow read: if signedIn();
+      allow create: if isPL() || (isLecturer() && request.resource.data.lecturerId == request.auth.uid);
+      allow update: if isPL() || isPRL() || (isLecturer() && resource.data.lecturerId == request.auth.uid);
+      allow delete: if isPL() || (isLecturer() && resource.data.lecturerId == request.auth.uid);
+    }
+
+    match /ratings/{ratingId} {
+      allow read: if signedIn();
+      allow create: if isStudent() &&
+        request.resource.data.anonymous == true &&
+        request.resource.data.lecturerId is string &&
+        request.resource.data.lecturerId != "" &&
+        request.resource.data.rating is number &&
+        !request.resource.data.keys().hasAny(["studentId", "studentName", "studentEmail", "uid", "email"]);
+      allow update, delete: if isPL();
+    }
+
+    match /teacherRatings/{ratingId} {
+      allow read: if signedIn();
+      allow create: if isStudent() &&
+        request.resource.data.anonymous == true &&
+        request.resource.data.keys().hasOnly(["teacherId", "lecturerId", "stars", "rating", "comment", "anonymous", "createdAt"]) &&
+        !request.resource.data.keys().hasAny(["studentId", "studentName", "studentEmail", "uid", "email"]);
+      allow update, delete: if isPL();
+    }
+
+    match /feedback/{feedbackId} {
+      allow read: if signedIn();
+      allow create, update: if isPL() || isPRL();
+      allow delete: if isPL();
+    }
+  }
+}
