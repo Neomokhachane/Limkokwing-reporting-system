@@ -20,6 +20,7 @@ export const COLLECTIONS = {
   attendance: "attendance",
   ratings: "ratings",
   feedback: "feedback",
+  profileEditRequests: "profileEditRequests",
 };
 
 const buildQuery = (collectionName, filters = []) => {

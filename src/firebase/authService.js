@@ -4,7 +4,7 @@ import {
   signOut, 
   onAuthStateChanged, 
   updateProfile 
-} from "firebase/auth";
+} from "./authApi";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./config";
 
@@ -38,7 +38,6 @@ export const registerUser = async (email, password, userData) => {
     
     return user;
   } catch (error) {
-    console.warn("Registration error:", error);
     throw error;
   }
 };
@@ -48,7 +47,6 @@ export const loginUser = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
   } catch (error) {
-    console.warn("Login error:", error);
     throw error;
   }
 };
@@ -57,7 +55,6 @@ export const logoutUser = async () => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.warn("Logout error:", error);
     throw error;
   }
 };
@@ -71,7 +68,6 @@ export const getUserData = async (uid) => {
     }
     return null;
   } catch (error) {
-    console.warn("Get user data error:", error);
     return null;
   }
 };

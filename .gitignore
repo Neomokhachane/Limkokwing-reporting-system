@@ -4,6 +4,8 @@
 
 # Production
 /build
+/dist-expo-check
+/dist-web-check
 
 # Misc
 .DS_Store
@@ -23,6 +25,11 @@ pids
 *.seed
 *.log
 .expo/
+ResultsPage/
+y/
+.firebase/
+.agents/
+skills-lock.json
 
 # Editor directories and files
 .idea

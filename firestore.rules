@@ -40,18 +40,35 @@ service cloud.firestore {
       let changed = request.resource.data.diff(resource.data).affectedKeys();
       return signedIn() &&
         request.auth.uid == userId &&
-        changed.hasOnly(["studentId", "studentNumber", "faculty"]) &&
+        resource.data.role == "student" &&
+        resource.data.profileDetailsLocked != true &&
+        changed.hasOnly([
+          "studentId",
+          "studentNumber",
+          "faculty",
+          "phoneNumber",
+          "address",
+          "gender",
+          "dateOfBirth",
+          "emergencyContact",
+          "profileDetailsLocked",
+          "updatedAt"
+        ]) &&
         (
           missing(resource.data.studentId) ||
           missing(resource.data.studentNumber) ||
-          missing(resource.data.faculty)
+          missing(resource.data.faculty) ||
+          resource.data.profileDetailsLocked == false ||
+          missing(resource.data.profileDetailsLocked)
         ) &&
         request.resource.data.studentId is string &&
         request.resource.data.studentId != "" &&
         request.resource.data.studentNumber is string &&
         request.resource.data.studentNumber != "" &&
         request.resource.data.faculty is string &&
-        request.resource.data.faculty != "";
+        request.resource.data.faculty != "" &&
+        request.resource.data.profileDetailsLocked == true &&
+        request.resource.data.updatedAt == request.time;
     }
 
     match /users/{userId} {
@@ -134,18 +151,49 @@ service cloud.firestore {
     }
 
     match /ratings/{ratingId} {
-      allow read: if signedIn();
+      allow read: if isPL() || isPRL() ||
+        (isLecturer() && resource.data.lecturerId == request.auth.uid) ||
+        (isStudent() && resource.data.studentId == request.auth.uid);
       allow create: if isStudent() &&
         request.resource.data.anonymous == true &&
+        request.resource.data.keys().hasOnly([
+          "studentId",
+          "lecturerId",
+          "lecturerName",
+          "lecturerFaculty",
+          "faculty",
+          "courseId",
+          "courseName",
+          "courseCode",
+          "anonymous",
+          "rating",
+          "teaching",
+          "punctuality",
+          "comment",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        request.resource.data.studentId == request.auth.uid &&
         request.resource.data.lecturerId is string &&
         request.resource.data.lecturerId != "" &&
+        request.resource.data.courseId is string &&
+        request.resource.data.courseId != "" &&
         request.resource.data.rating is number &&
-        !request.resource.data.keys().hasAny(["studentId", "studentName", "studentEmail", "uid", "email"]);
-      allow update, delete: if isPL();
+        !request.resource.data.keys().hasAny(["studentName", "studentEmail", "uid", "email"]);
+      allow update: if isPL() || (
+        isStudent() &&
+        resource.data.studentId == request.auth.uid &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.lecturerId == resource.data.lecturerId &&
+        request.resource.data.courseId == resource.data.courseId &&
+        request.resource.data.anonymous == true &&
+        !request.resource.data.keys().hasAny(["studentName", "studentEmail", "uid", "email"])
+      );
+      allow delete: if isPL();
     }
 
     match /teacherRatings/{ratingId} {
-      allow read: if signedIn();
+      allow read: if isPL() || isPRL() || (isLecturer() && resource.data.lecturerId == request.auth.uid);
       allow create: if isStudent() &&
         request.resource.data.anonymous == true &&
         request.resource.data.keys().hasOnly(["teacherId", "lecturerId", "stars", "rating", "comment", "anonymous", "createdAt"]) &&
@@ -156,6 +204,31 @@ service cloud.firestore {
     match /feedback/{feedbackId} {
       allow read: if signedIn();
       allow create, update: if isPL() || isPRL();
+      allow delete: if isPL();
+    }
+
+    match /profileEditRequests/{requestId} {
+      allow read: if isPL() || (signedIn() && resource.data.studentId == request.auth.uid);
+      allow create: if isStudent() &&
+        request.resource.data.keys().hasOnly([
+          "studentId",
+          "studentName",
+          "studentNumber",
+          "faculty",
+          "reason",
+          "status",
+          "createdAt",
+          "createdBy"
+        ]) &&
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.reason is string &&
+        request.resource.data.reason != "" &&
+        request.resource.data.status == "pending" &&
+        request.resource.data.createdAt == request.time;
+      allow update: if isPL() &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.status in ["approved", "rejected"];
       allow delete: if isPL();
     }
   }

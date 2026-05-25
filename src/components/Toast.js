@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const ToastContext = createContext(null);
 
@@ -10,8 +11,8 @@ export const ToastProvider = ({ children }) => {
 
   const addToast = useCallback((message, type = "info") => {
     const id = ++toastId;
-    setToasts((t) => [...t, { id, message, type }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+    setToasts((items) => [...items, { id, message, type }]);
+    setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3500);
   }, []);
 
   useEffect(() => {
@@ -21,71 +22,19 @@ export const ToastProvider = ({ children }) => {
     };
   }, [addToast]);
 
-  const icons = { success: "S", error: "E", info: "I", warning: "W" };
-  const colors = {
-    success: "#10b981",
-    error: "#ef4444",
-    info: "#6c63ff",
-    warning: "#f59e0b",
-  };
-
   return (
     <ToastContext.Provider value={addToast}>
       {children}
-      <div
-        style={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          zIndex: 9999,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          maxWidth: 360,
-        }}
-      >
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "12px 16px",
-              background: "var(--bg-card)",
-              border: `1px solid ${colors[t.type]}40`,
-              borderLeft: `4px solid ${colors[t.type]}`,
-              borderRadius: 10,
-              boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-              fontSize: 14,
-              color: "var(--text-primary)",
-              animation: "slideIn 0.2s ease",
-            }}
-          >
-            <span>{icons[t.type]}</span>
-            <span style={{ flex: 1 }}>{t.message}</span>
-            <button
-              onClick={() => setToasts((ts) => ts.filter((x) => x.id !== t.id))}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--text-muted)",
-                cursor: "pointer",
-                fontSize: 16,
-                lineHeight: 1,
-              }}
-            >
-              X
-            </button>
-          </div>
+      <View pointerEvents="box-none" style={styles.wrap}>
+        {toasts.map((item) => (
+          <View key={item.id} style={[styles.toast, styles[item.type] || styles.info]}>
+            <Text style={styles.message}>{item.message}</Text>
+            <TouchableOpacity onPress={() => setToasts((items) => items.filter((toast) => toast.id !== item.id))}>
+              <Text style={styles.close}>X</Text>
+            </TouchableOpacity>
+          </View>
         ))}
-      </div>
-      <style>{`
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
+      </View>
     </ToastContext.Provider>
   );
 };
@@ -93,10 +42,41 @@ export const ToastProvider = ({ children }) => {
 export const useToast = () => useContext(ToastContext);
 
 const toast = {
-  success: (msg) => externalToast && externalToast(msg, "success"),
-  error: (msg) => externalToast && externalToast(msg, "error"),
-  info: (msg) => externalToast && externalToast(msg, "info"),
-  warning: (msg) => externalToast && externalToast(msg, "warning"),
+  success: (message) => externalToast && externalToast(message, "success"),
+  error: (message) => externalToast && externalToast(message, "error"),
+  info: (message) => externalToast && externalToast(message, "info"),
+  warning: (message) => externalToast && externalToast(message, "warning"),
 };
+
+const styles = StyleSheet.create({
+  wrap: {
+    position: "absolute",
+    top: 48,
+    left: 16,
+    right: 16,
+    zIndex: 999,
+    gap: 8,
+  },
+  toast: {
+    borderRadius: 10,
+    borderLeftWidth: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: "#151827",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  success: { borderLeftColor: "#10b981" },
+  error: { borderLeftColor: "#ef4444" },
+  info: { borderLeftColor: "#6c63ff" },
+  warning: { borderLeftColor: "#f59e0b" },
+  message: { color: "#f8fafc", flex: 1, fontSize: 14 },
+  close: { color: "#94a3b8", fontWeight: "700", paddingLeft: 12 },
+});
 
 export default toast;
