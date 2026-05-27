@@ -28,8 +28,6 @@ pids
 ResultsPage/
 y/
 .firebase/
-.agents/
-skills-lock.json
 
 # Editor directories and files
 .idea
