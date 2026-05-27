@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export const colors = {
   bg: "#0f0f1a",
@@ -116,6 +118,11 @@ const formatDateValue = (date) => `${date.getFullYear()}-${pad(date.getMonth() +
 export function DateInput({ label, value, onChange, placeholder = "Select date" }) {
   const [open, setOpen] = React.useState(false);
   const today = React.useMemo(() => new Date(), []);
+  const selectedDate = React.useMemo(() => {
+    if (!value) return today;
+    const parsed = new Date(`${value}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? today : parsed;
+  }, [today, value]);
   const options = React.useMemo(() => {
     const days = [];
     for (let offset = -14; offset <= 45; offset += 1) {
@@ -129,6 +136,14 @@ export function DateInput({ label, value, onChange, placeholder = "Select date" 
     return days;
   }, [today]);
 
+  const handleNativeChange = (event, date) => {
+    if (Platform.OS === "android") setOpen(false);
+    if (event?.type === "dismissed") return;
+    if (date) onChange(formatDateValue(date));
+  };
+
+  const showNativePicker = open && Platform.OS !== "web";
+
   return (
     <View style={styles.inputWrap}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -138,7 +153,15 @@ export function DateInput({ label, value, onChange, placeholder = "Select date" 
         </Text>
         <Text style={styles.selectChevron}>calendar</Text>
       </Pressable>
-      <Modal transparent visible={open} animationType="fade" onRequestClose={() => setOpen(false)}>
+      {showNativePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display={Platform.OS === "ios" ? "inline" : "default"}
+          onChange={handleNativeChange}
+        />
+      )}
+      <Modal transparent visible={open && Platform.OS === "web"} animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.modalShade} onPress={() => setOpen(false)}>
           <View style={styles.selectMenu}>
             <Text style={styles.strong}>{label || "Select date"}</Text>
