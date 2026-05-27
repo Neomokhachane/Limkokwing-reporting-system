@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { Text, View } from "react-native";
-import { FACULTIES } from "../constants/academic";
-import { loginUser, registerUser } from "../firebase/authService";
-import toast from "../components/Toast";
-import { Button, Card, Input, Screen, Select, styles } from "../components/NativeUI";
+import { FACULTIES } from "../../constants/academic";
+import { loginUser, registerUser } from "../../firebase/authService";
+import toast from "../../components/Toast";
+import { Button, Card, Input, Screen, Select, styles } from "../../components/NativeUI";
 
 const initialForm = {
   fullName: "",

@@ -28,6 +28,7 @@ const roleMenus = {
   ],
   prl: [
     ["Courses", "PRLCourses"],
+    ["Classes", "PRLClasses"],
     ["Reports", "PRLReports"],
     ["Monitoring", "PRLMonitoring"],
     ["Ratings", "PRLRating"],

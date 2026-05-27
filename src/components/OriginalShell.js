@@ -24,6 +24,7 @@ const NAV_ITEMS = {
   prl: [
     ["H", "Dashboard", "Dashboard"],
     ["C", "Courses", "PRLCourses"],
+    ["L", "Classes", "PRLClasses"],
     ["P", "Reports", "PRLReports"],
     ["M", "Monitoring", "PRLMonitoring"],
     ["R", "Ratings", "PRLRating"],
