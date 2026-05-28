@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import AppErrorBoundary from "./components/AppErrorBoundary";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/Toast";
 import AppNavigator from "./navigation/AppNavigator";
@@ -48,14 +49,16 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={rootStyle}>
-      <SafeAreaProvider style={{ flex: 1 }}>
-        <AuthProvider>
-          <ToastProvider>
-            <StatusBar style="light" />
-            <AppNavigator />
-          </ToastProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
+      <AppErrorBoundary>
+        <SafeAreaProvider style={{ flex: 1 }}>
+          <AuthProvider>
+            <ToastProvider>
+              <StatusBar style="light" />
+              <AppNavigator />
+            </ToastProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      </AppErrorBoundary>
     </GestureHandlerRootView>
   );
 }
