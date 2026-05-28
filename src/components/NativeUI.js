@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 
 export const colors = {
   bg: "#0f0f1a",
@@ -115,6 +114,22 @@ export function Input({ label, value, onChangeText, placeholder, secureTextEntry
 const pad = (value) => String(value).padStart(2, "0");
 const formatDateValue = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+let NativeDateTimePicker = null;
+let nativeDateTimePickerChecked = false;
+
+const getNativeDateTimePicker = () => {
+  if (Platform.OS === "web") return null;
+  if (nativeDateTimePickerChecked) return NativeDateTimePicker;
+
+  nativeDateTimePickerChecked = true;
+  try {
+    NativeDateTimePicker = require("@react-native-community/datetimepicker").default;
+  } catch (error) {
+    NativeDateTimePicker = null;
+  }
+  return NativeDateTimePicker;
+};
+
 export function DateInput({ label, value, onChange, placeholder = "Select date" }) {
   const [open, setOpen] = React.useState(false);
   const today = React.useMemo(() => new Date(), []);
@@ -142,7 +157,9 @@ export function DateInput({ label, value, onChange, placeholder = "Select date" 
     if (date) onChange(formatDateValue(date));
   };
 
-  const showNativePicker = open && Platform.OS !== "web";
+  const DateTimePicker = open ? getNativeDateTimePicker() : null;
+  const showNativePicker = open && DateTimePicker;
+  const showFallbackPicker = open && !DateTimePicker;
 
   return (
     <View style={styles.inputWrap}>
@@ -161,7 +178,7 @@ export function DateInput({ label, value, onChange, placeholder = "Select date" 
           onChange={handleNativeChange}
         />
       )}
-      <Modal transparent visible={open && Platform.OS === "web"} animationType="fade" onRequestClose={() => setOpen(false)}>
+      <Modal transparent visible={showFallbackPicker} animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.modalShade} onPress={() => setOpen(false)}>
           <View style={styles.selectMenu}>
             <Text style={styles.strong}>{label || "Select date"}</Text>
