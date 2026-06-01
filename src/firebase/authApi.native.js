@@ -8,4 +8,4 @@ export {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-} from "../../node_modules/@firebase/auth/dist/rn/index.js";
+} from "@firebase/auth";
