@@ -6,10 +6,11 @@ import {
   updateProfile 
 } from "./authApi";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "./config";
+import { db, getAuthInstance } from "./config";
 
 export const registerUser = async (email, password, userData) => {
   try {
+    const auth = getAuthInstance();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
@@ -44,6 +45,7 @@ export const registerUser = async (email, password, userData) => {
 
 export const loginUser = async (email, password) => {
   try {
+    const auth = getAuthInstance();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
   } catch (error) {
@@ -53,6 +55,7 @@ export const loginUser = async (email, password) => {
 
 export const logoutUser = async () => {
   try {
+    const auth = getAuthInstance();
     await signOut(auth);
   } catch (error) {
     throw error;
@@ -73,5 +76,10 @@ export const getUserData = async (uid) => {
 };
 
 export const onAuthChange = (callback) => {
-  return onAuthStateChanged(auth, callback);
+  try {
+    return onAuthStateChanged(getAuthInstance(), callback, () => callback(null));
+  } catch (error) {
+    callback(null);
+    return () => {};
+  }
 };

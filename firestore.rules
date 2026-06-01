@@ -192,6 +192,7 @@ service cloud.firestore {
       allow delete: if isPL();
     }
 
+
     match /teacherRatings/{ratingId} {
       allow read: if isPL() || isPRL() || (isLecturer() && resource.data.lecturerId == request.auth.uid);
       allow create: if isStudent() &&

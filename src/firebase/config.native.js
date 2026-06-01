@@ -1,10 +1,16 @@
 import { getApp, getApps, initializeApp } from "@firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "./authApi";
 import { firebaseConfig } from "./appConfig";
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+let authInstance = null;
 
-export const auth = getAuth(app);
+export const getAuthInstance = () => {
+  if (authInstance) return authInstance;
+  const { getAuth } = require("./authApi");
+  authInstance = getAuth(app);
+  return authInstance;
+};
+
 export const db = getFirestore(app);
 export default app;

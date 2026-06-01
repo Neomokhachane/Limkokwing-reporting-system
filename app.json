@@ -4,10 +4,16 @@
     "slug": "limkokwing-reporting-system",
     "version": "1.0.0",
     "orientation": "portrait",
-      "userInterfaceStyle": "dark",
-    "platforms": ["ios", "android", "web"],
+    "userInterfaceStyle": "dark",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "icon": "./assets/images/icon.png",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -15,10 +21,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0f1220"
-      }
+      },
+      "package": "com.limkokwing.reportingsystem"
     },
     "web": {
       "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2ca8759c-367d-41a0-8171-58872f7ecdd9"
+      }
     }
   }
 }
