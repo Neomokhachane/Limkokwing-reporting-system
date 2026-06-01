@@ -4,6 +4,7 @@
 
 # Production
 /build
+/builds
 /dist-expo-check
 /dist-web-check
 
