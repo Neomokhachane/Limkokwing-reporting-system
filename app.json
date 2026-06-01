@@ -2,7 +2,7 @@
   "expo": {
     "name": "Limkokwing Reporting System",
     "slug": "limkokwing-reporting-system",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "platforms": [
@@ -22,7 +22,8 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0f1220"
       },
-      "package": "com.limkokwing.reportingsystem"
+      "package": "com.limkokwing.reportingsystem",
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro"

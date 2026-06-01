@@ -9,6 +9,8 @@ const nativeApi = read("src/firebase/authApi.native.js");
 const nativeConfig = read("src/firebase/config.native.js");
 const webConfig = read("src/firebase/config.web.js");
 const authService = read("src/firebase/authService.js");
+const metroConfig = read("metro.config.js");
+const appConfig = JSON.parse(read("app.json"));
 
 const checks = [
   {
@@ -16,8 +18,21 @@ const checks = [
     pass: nativeApi.includes('from "@firebase/auth"'),
   },
   {
+    name: "native firebase app uses the public Firebase app package",
+    pass: nativeConfig.includes('from "firebase/app"'),
+  },
+  {
     name: "native auth does not deep-import node_modules",
     pass: !nativeApi.includes("node_modules"),
+  },
+  {
+    name: "metro forces @firebase/auth to the React Native Auth bundle on native platforms",
+    pass:
+      metroConfig.includes('moduleName === "@firebase/auth"') &&
+      metroConfig.includes('"android"') &&
+      metroConfig.includes('"ios"') &&
+      metroConfig.includes('"rn"') &&
+      metroConfig.includes('"index.js"'),
   },
   {
     name: "native auth initializes with AsyncStorage persistence",
@@ -37,6 +52,10 @@ const checks = [
   {
     name: "auth service obtains auth through platform config",
     pass: authService.includes("getAuthInstance()"),
+  },
+  {
+    name: "android build has an explicit version code for upgrade installs",
+    pass: Number.isInteger(appConfig.expo?.android?.versionCode),
   },
 ];
 
